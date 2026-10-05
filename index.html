@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BioDomo - Ecosistemas Inteligentes</title>
+    <meta name="theme-color" content="#283618">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="BioDomo">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="apple-touch-icon" href="./assets/pwa-icons/apple-touch-icon.png">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -37,6 +42,7 @@
                 <h2>Agricultura urbana automatizada</h2>
                 <p>Transformamos cualquier espacio interior en un huerto autónomo. BioDomo utiliza tecnología de vanguardia para cultivar alimentos frescos en tu departamento sin que tengas que preocuparte por el clima, la luz o el riego.</p>
                 <a href="#innovacion" class="btn">Descubre cómo funciona</a>
+                <button type="button" class="btn install-button" id="install-app" hidden>Instalar BioDomo</button>
             </div>
             <div class="media-container">
                 <img src="assets/hero.jpg" alt="Huerto inteligente BioDomo en un departamento" class="responsive-img">
@@ -66,5 +72,46 @@
         </div>
     </footer>
 
+    <script>
+        let deferredInstallPrompt;
+        const installButton = document.getElementById("install-app");
+
+        window.addEventListener("beforeinstallprompt", (event) => {
+            event.preventDefault();
+            deferredInstallPrompt = event;
+            installButton.hidden = false;
+        });
+
+        installButton.addEventListener("click", async () => {
+            if (!deferredInstallPrompt) {
+                return;
+            }
+
+            const installPrompt = deferredInstallPrompt;
+            deferredInstallPrompt = null;
+            installButton.hidden = true;
+
+            try {
+                await installPrompt.prompt();
+                await installPrompt.userChoice;
+            } catch (error) {
+                console.error("No se pudo iniciar la instalación de BioDomo:", error);
+            }
+        });
+
+        window.addEventListener("appinstalled", () => {
+            deferredInstallPrompt = null;
+            installButton.hidden = true;
+        });
+
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", () => {
+                navigator.serviceWorker.register("./service-worker.js")
+                    .catch((error) => {
+                        console.error("No se pudo registrar el Service Worker de BioDomo:", error);
+                    });
+            });
+        }
+    </script>
 </body>
 </html>

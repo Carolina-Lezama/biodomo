@@ -127,6 +127,15 @@ section {
     transition: all 0.3s;
 }
 
+.install-button[hidden] {
+    display: none;
+}
+
+.install-button {
+    cursor: pointer;
+    font-size: 1rem;
+}
+
 .btn:hover {
     background-color: var(--color-fondo);
     color: var(--color-acento);
