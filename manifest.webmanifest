@@ -1,8 +1,8 @@
 {
     "id": "./",
-    "name": "BioDomo - Ecosistemas Inteligentes",
+    "name": "BioDomo - Ecosistema Inteligente",
     "short_name": "BioDomo",
-    "description": "Tu ecosistema inteligente en casa.",
+    "description": "Plataforma de agricultura urbana automatizada.",
     "lang": "es",
     "start_url": "./",
     "scope": "./",
