@@ -49,6 +49,14 @@ servidor.
 
 ## Cómo probar el flujo
 
+Si `/api/push/config` responde `503`, confirma que las seis variables
+(`UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`,
+`NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` y
+`ADMIN_SECRET`) existen en el entorno que corresponde al despliegue visitado
+(Production o Preview). Vercel solo aplica cambios de variables a nuevos
+despliegues: vuelve a desplegar después de añadirlas. El endpoint informa qué
+nombres faltan sin revelar ningún valor secreto.
+
 1. Abre el sitio desplegado por HTTPS, activa las notificaciones y acepta el
    permiso. El navegador registra la suscripción de ese dispositivo en Redis.
 2. Repite la activación en cada dispositivo que quieras incluir como receptor.

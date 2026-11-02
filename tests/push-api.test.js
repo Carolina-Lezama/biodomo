@@ -52,8 +52,48 @@ test("push configuration refuses to expose a partial setup", async (t) => {
     const response = createResponse();
     await configHandler(request("GET"), response);
     assert.equal(response.statusCode, 503);
-    assert.match(response.body.error, /no está configurado/i);
+    assert.match(response.body.error, /NEXT_PUBLIC_VAPID_PUBLIC_KEY/);
+    assert.match(response.body.error, /ADMIN_SECRET/);
     assert.equal(response.body.privateKey, undefined);
+});
+
+test("push configuration returns only the public key when all settings are valid", async (t) => {
+    const names = [
+        "NEXT_PUBLIC_VAPID_PUBLIC_KEY",
+        "VAPID_PRIVATE_KEY",
+        "VAPID_SUBJECT",
+        "UPSTASH_REDIS_REST_URL",
+        "UPSTASH_REDIS_REST_TOKEN",
+        "ADMIN_SECRET"
+    ];
+    const previousEnv = Object.fromEntries(names.map((name) => [name, process.env[name]]));
+    const previousFromEnv = Redis.fromEnv;
+    const keys = webPush.generateVAPIDKeys();
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY = keys.publicKey;
+    process.env.VAPID_PRIVATE_KEY = keys.privateKey;
+    process.env.VAPID_SUBJECT = "mailto:test@example.com";
+    process.env.UPSTASH_REDIS_REST_URL = "https://redis.example";
+    process.env.UPSTASH_REDIS_REST_TOKEN = "private-redis-token";
+    process.env.ADMIN_SECRET = "a".repeat(40);
+    Redis.fromEnv = () => ({});
+    t.after(() => {
+        names.forEach((name) => {
+            if (previousEnv[name] === undefined) {
+                delete process.env[name];
+            } else {
+                process.env[name] = previousEnv[name];
+            }
+        });
+        Redis.fromEnv = previousFromEnv;
+    });
+
+    const response = createResponse();
+    await configHandler(request("GET"), response);
+    assert.equal(response.statusCode, 200);
+    assert.deepEqual(response.body, { publicKey: keys.publicKey });
+    assert.equal(JSON.stringify(response.body).includes(keys.privateKey), false);
+    assert.equal(JSON.stringify(response.body).includes(process.env.UPSTASH_REDIS_REST_TOKEN), false);
+    assert.equal(response.headers["Cache-Control"], "no-store");
 });
 
 test("push send rejects invalid admin credentials before contacting Redis", async (t) => {
