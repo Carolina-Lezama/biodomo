@@ -1,10 +1,11 @@
-const CACHE_NAME = "biodomo-static-v4";
+const CACHE_NAME = "biodomo-static-v5";
 const PRECACHE_URLS = [
     "./",
     "./index.html",
     "./manifest.webmanifest",
     "./css/styles.css",
     "./js/notifications.js",
+    "./favicon.ico",
     "./assets/logo.png",
     "./assets/hero.jpg",
     "./assets/pwa-icons/icon-192.png",

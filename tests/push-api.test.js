@@ -5,7 +5,7 @@ const sendHandler = require("../api/push/send");
 const subscribeHandler = require("../api/push/subscribe");
 const { Redis } = require("@upstash/redis");
 const webPush = require("web-push");
-const { hasValidAdminToken, hasValidSubscriptionShape } = require("../server/push");
+const { getWebPush, hasValidAdminToken, hasValidSubscriptionShape } = require("../server/push");
 
 function createResponse() {
     return {
@@ -75,7 +75,7 @@ test("push configuration returns only the public key when all settings are valid
     process.env.UPSTASH_REDIS_REST_URL = "https://redis.example";
     process.env.UPSTASH_REDIS_REST_TOKEN = "private-redis-token";
     process.env.ADMIN_SECRET = "a".repeat(40);
-    Redis.fromEnv = () => ({});
+    Redis.fromEnv = () => ({ ping: async () => "PONG" });
     t.after(() => {
         names.forEach((name) => {
             if (previousEnv[name] === undefined) {
@@ -94,6 +94,66 @@ test("push configuration returns only the public key when all settings are valid
     assert.equal(JSON.stringify(response.body).includes(keys.privateKey), false);
     assert.equal(JSON.stringify(response.body).includes(process.env.UPSTASH_REDIS_REST_TOKEN), false);
     assert.equal(response.headers["Cache-Control"], "no-store");
+});
+
+test("push configuration reports an Upstash connection failure separately", async (t) => {
+    const names = [
+        "NEXT_PUBLIC_VAPID_PUBLIC_KEY",
+        "VAPID_PRIVATE_KEY",
+        "VAPID_SUBJECT",
+        "UPSTASH_REDIS_REST_URL",
+        "UPSTASH_REDIS_REST_TOKEN",
+        "ADMIN_SECRET"
+    ];
+    const previousEnv = Object.fromEntries(names.map((name) => [name, process.env[name]]));
+    const previousFromEnv = Redis.fromEnv;
+    const keys = webPush.generateVAPIDKeys();
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY = keys.publicKey;
+    process.env.VAPID_PRIVATE_KEY = keys.privateKey;
+    process.env.VAPID_SUBJECT = "mailto:test@example.com";
+    process.env.UPSTASH_REDIS_REST_URL = "https://redis.example";
+    process.env.UPSTASH_REDIS_REST_TOKEN = "private-redis-token";
+    process.env.ADMIN_SECRET = "a".repeat(40);
+    Redis.fromEnv = () => ({ ping: async () => { throw new Error("unauthorized"); } });
+    t.after(() => {
+        names.forEach((name) => {
+            if (previousEnv[name] === undefined) {
+                delete process.env[name];
+            } else {
+                process.env[name] = previousEnv[name];
+            }
+        });
+        Redis.fromEnv = previousFromEnv;
+    });
+
+    const response = createResponse();
+    await configHandler(request("GET"), response);
+    assert.equal(response.statusCode, 503);
+    assert.match(response.body.error, /VAPID está configurado, pero Upstash/);
+    assert.equal(JSON.stringify(response.body).includes("private-redis-token"), false);
+});
+
+test("VAPID rejects a public and private key from different pairs", () => {
+    const publicKeys = webPush.generateVAPIDKeys();
+    const privateKeys = webPush.generateVAPIDKeys();
+    const previous = {
+        publicKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+        privateKey: process.env.VAPID_PRIVATE_KEY,
+        subject: process.env.VAPID_SUBJECT
+    };
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY = publicKeys.publicKey;
+    process.env.VAPID_PRIVATE_KEY = privateKeys.privateKey;
+    process.env.VAPID_SUBJECT = "mailto:test@example.com";
+    try {
+        assert.throws(() => getWebPush(), /no forman un par/);
+    } finally {
+        if (previous.publicKey === undefined) delete process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+        else process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY = previous.publicKey;
+        if (previous.privateKey === undefined) delete process.env.VAPID_PRIVATE_KEY;
+        else process.env.VAPID_PRIVATE_KEY = previous.privateKey;
+        if (previous.subject === undefined) delete process.env.VAPID_SUBJECT;
+        else process.env.VAPID_SUBJECT = previous.subject;
+    }
 });
 
 test("push send rejects invalid admin credentials before contacting Redis", async (t) => {

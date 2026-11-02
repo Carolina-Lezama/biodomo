@@ -72,6 +72,15 @@ function getWebPush() {
         throw new Error("Faltan la clave pública VAPID, VAPID_PRIVATE_KEY o VAPID_SUBJECT.");
     }
     webPush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+
+    const ecdh = crypto.createECDH("prime256v1");
+    ecdh.setPrivateKey(Buffer.from(VAPID_PRIVATE_KEY, "base64url"));
+    const derivedPublicKey = ecdh.getPublicKey(null, "uncompressed");
+    const configuredPublicKey = Buffer.from(VAPID_PUBLIC_KEY, "base64url");
+    if (!crypto.timingSafeEqual(derivedPublicKey, configuredPublicKey)) {
+        throw new Error("La clave pública y privada VAPID no forman un par.");
+    }
+
     return webPush;
 }
 

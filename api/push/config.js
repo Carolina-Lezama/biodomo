@@ -31,12 +31,22 @@ module.exports = async function handler(request, response) {
 
     try {
         getWebPush();
-        getRedis();
-        return sendJson(response, 200, { publicKey: getVapidPublicKey() });
     } catch (error) {
-        console.error("La configuración del servicio push no es válida:", error.message);
+        console.error("La configuración VAPID no es válida:", error.message);
         return sendJson(response, 503, {
-            error: "No se pudo validar la configuración de VAPID o Upstash. Revisa las variables y vuelve a desplegar."
+            error: "La configuración VAPID no es válida. Revisa que la clave pública y la privada pertenezcan al mismo par, y que estén copiadas completas sin comillas ni prefijos."
         });
     }
+
+    try {
+        const redis = getRedis();
+        await redis.ping();
+    } catch (error) {
+        console.error("No se pudo conectar con Upstash Redis:", error.name || "Error");
+        return sendJson(response, 503, {
+            error: "VAPID está configurado, pero Upstash no respondió. Verifica que UPSTASH_REDIS_REST_URL y UPSTASH_REDIS_REST_TOKEN sean de la misma base de datos Redis."
+        });
+    }
+
+    return sendJson(response, 200, { publicKey: getVapidPublicKey() });
 };

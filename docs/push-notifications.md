@@ -57,6 +57,16 @@ Si `/api/push/config` responde `503`, confirma que las seis variables
 despliegues: vuelve a desplegar después de añadirlas. El endpoint informa qué
 nombres faltan sin revelar ningún valor secreto.
 
+Si el mensaje indica que **VAPID no es válida**, vuelve a generar un único par
+con `npx web-push generate-vapid-keys` y copia juntos `publicKey` a
+`NEXT_PUBLIC_VAPID_PUBLIC_KEY` y `privateKey` a `VAPID_PRIVATE_KEY`, sin comillas,
+prefijos ni espacios. El valor de `VAPID_SUBJECT` debe comenzar por `mailto:` o
+ser una URL. Si indica que **Upstash no respondió**, confirma que la URL y el
+token pertenecen a la misma base Redis y vuelve a copiarlos desde su panel. Que
+`NEXT_PUBLIC_VAPID_PUBLIC_KEY` sea una variable tipo Config y las demás sean
+Secrets es válido: el backend las lee con `process.env`, y la pública se entrega
+al navegador por la API.
+
 1. Abre el sitio desplegado por HTTPS, activa las notificaciones y acepta el
    permiso. El navegador registra la suscripción de ese dispositivo en Redis.
 2. Repite la activación en cada dispositivo que quieras incluir como receptor.
