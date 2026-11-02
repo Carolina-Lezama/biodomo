@@ -71,16 +71,45 @@ function getWebPush() {
     if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY || !VAPID_SUBJECT) {
         throw new Error("Faltan la clave pública VAPID, VAPID_PRIVATE_KEY o VAPID_SUBJECT.");
     }
-    webPush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 
-    const ecdh = crypto.createECDH("prime256v1");
-    ecdh.setPrivateKey(Buffer.from(VAPID_PRIVATE_KEY, "base64url"));
-    const derivedPublicKey = ecdh.getPublicKey(null, "uncompressed");
-    const configuredPublicKey = Buffer.from(VAPID_PUBLIC_KEY, "base64url");
-    if (!crypto.timingSafeEqual(derivedPublicKey, configuredPublicKey)) {
-        throw new Error("La clave pública y privada VAPID no forman un par.");
+    let subject;
+    try {
+        subject = new URL(VAPID_SUBJECT);
+    } catch {
+        throw new Error("VAPID_SUBJECT debe ser una URL https:// o un correo mailto: válido.");
+    }
+    if (!["https:", "mailto:"].includes(subject.protocol)) {
+        throw new Error("VAPID_SUBJECT debe ser una URL https:// o un correo mailto: válido.");
     }
 
+    if (!/^[A-Za-z0-9_-]+$/.test(VAPID_PUBLIC_KEY)) {
+        throw new Error("NEXT_PUBLIC_VAPID_PUBLIC_KEY debe ser una clave Base64URL sin prefijo ni padding.");
+    }
+    const configuredPublicKey = Buffer.from(VAPID_PUBLIC_KEY, "base64url");
+    if (configuredPublicKey.length !== 65 || configuredPublicKey[0] !== 4) {
+        throw new Error("NEXT_PUBLIC_VAPID_PUBLIC_KEY no tiene el formato esperado (65 bytes Base64URL).");
+    }
+
+    if (!/^[A-Za-z0-9_-]+$/.test(VAPID_PRIVATE_KEY)) {
+        throw new Error("VAPID_PRIVATE_KEY debe ser una clave Base64URL sin prefijo ni padding.");
+    }
+    const privateKey = Buffer.from(VAPID_PRIVATE_KEY, "base64url");
+    if (privateKey.length !== 32) {
+        throw new Error("VAPID_PRIVATE_KEY no tiene el formato esperado (32 bytes Base64URL).");
+    }
+
+    const ecdh = crypto.createECDH("prime256v1");
+    try {
+        ecdh.setPrivateKey(privateKey);
+    } catch {
+        throw new Error("VAPID_PRIVATE_KEY no es una clave válida para la curva P-256.");
+    }
+    const derivedPublicKey = ecdh.getPublicKey(null, "uncompressed");
+    if (!crypto.timingSafeEqual(derivedPublicKey, configuredPublicKey)) {
+        throw new Error("Las claves VAPID no corresponden: la clave pública no pertenece a esa clave privada.");
+    }
+
+    webPush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
     return webPush;
 }
 

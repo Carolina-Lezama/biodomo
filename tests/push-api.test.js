@@ -145,7 +145,29 @@ test("VAPID rejects a public and private key from different pairs", () => {
     process.env.VAPID_PRIVATE_KEY = privateKeys.privateKey;
     process.env.VAPID_SUBJECT = "mailto:test@example.com";
     try {
-        assert.throws(() => getWebPush(), /no forman un par/);
+        assert.throws(() => getWebPush(), /no corresponden/);
+    } finally {
+        if (previous.publicKey === undefined) delete process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+        else process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY = previous.publicKey;
+        if (previous.privateKey === undefined) delete process.env.VAPID_PRIVATE_KEY;
+        else process.env.VAPID_PRIVATE_KEY = previous.privateKey;
+        if (previous.subject === undefined) delete process.env.VAPID_SUBJECT;
+        else process.env.VAPID_SUBJECT = previous.subject;
+    }
+});
+
+test("VAPID accepts a matching generated key pair", () => {
+    const keys = webPush.generateVAPIDKeys();
+    const previous = {
+        publicKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
+        privateKey: process.env.VAPID_PRIVATE_KEY,
+        subject: process.env.VAPID_SUBJECT
+    };
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY = keys.publicKey;
+    process.env.VAPID_PRIVATE_KEY = keys.privateKey;
+    process.env.VAPID_SUBJECT = "mailto:test@example.com";
+    try {
+        assert.equal(getWebPush(), webPush);
     } finally {
         if (previous.publicKey === undefined) delete process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
         else process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY = previous.publicKey;

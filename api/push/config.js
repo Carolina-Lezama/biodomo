@@ -34,7 +34,7 @@ module.exports = async function handler(request, response) {
     } catch (error) {
         console.error("La configuración VAPID no es válida:", error.message);
         return sendJson(response, 503, {
-            error: "La configuración VAPID no es válida. Revisa que la clave pública y la privada pertenezcan al mismo par, y que estén copiadas completas sin comillas ni prefijos."
+            error: error.message
         });
     }
 
