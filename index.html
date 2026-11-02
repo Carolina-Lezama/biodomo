@@ -29,6 +29,7 @@
                 <ul class="nav-links">
                     <li><a href="#inicio">Inicio</a></li>
                     <li><a href="#innovacion">IoT Botánico (Proyecto Final)</a></li>
+                    <li><a href="#notificaciones">Notificaciones</a></li>
                     <li><a href="#impacto">Impacto Ambiental</a></li>
                 </ul>
             </nav>
@@ -63,6 +64,37 @@
                 </video>
             </div>
         </section>
+
+        <section id="notificaciones" class="notifications-section">
+            <div class="content">
+                <h2>Notificaciones de BioDomo</h2>
+                <p>Prueba cómo una PWA puede mostrar avisos del huerto incluso cuando no estás viendo esta página. Escribe un mensaje y envíalo a este dispositivo.</p>
+                <p class="notification-note">Esta demostración genera notificaciones locales en este navegador. Para enviar mensajes de forma remota se necesita un servidor push.</p>
+                <button type="button" class="btn" id="enable-notifications">Activar notificaciones</button>
+                <p class="notification-status" id="notification-status" role="status" aria-live="polite">Comprobando compatibilidad...</p>
+
+                <form id="notification-form" class="notification-form">
+                    <label for="notification-title">Título</label>
+                    <input id="notification-title" name="title" type="text" maxlength="60" value="BioDomo" required>
+                    <label for="notification-message">Mensaje</label>
+                    <textarea id="notification-message" name="message" maxlength="180" rows="3" required>¡Es hora de revisar tu huerto!</textarea>
+                    <button type="submit" class="btn" id="send-notification" disabled>Enviar notificación</button>
+                </form>
+            </div>
+            <div class="notification-inbox" aria-labelledby="notification-inbox-title">
+                <h3 id="notification-inbox-title">Notificaciones enviadas</h3>
+                <ul id="notification-list" class="notification-list" aria-live="polite">
+                    <li class="notification-empty">Todavía no has enviado notificaciones.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="impacto" class="impact-section">
+            <div class="content">
+                <h2>Impacto Ambiental</h2>
+                <p>BioDomo acerca el cultivo de alimentos frescos a los espacios urbanos y promueve un uso consciente de los recursos.</p>
+            </div>
+        </section>
     </main>
 
     <!-- PIE DE PÁGINA -->
@@ -73,6 +105,7 @@
         </div>
     </footer>
 
+    <script src="js/notifications.js"></script>
     <script>
         let deferredInstallPrompt;
         const installButton = document.getElementById("install-app");

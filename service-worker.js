@@ -1,9 +1,10 @@
-const CACHE_NAME = "biodomo-static-v2";
+const CACHE_NAME = "biodomo-static-v3";
 const PRECACHE_URLS = [
     "./",
     "./index.html",
     "./manifest.webmanifest",
     "./css/styles.css",
+    "./js/notifications.js",
     "./assets/logo.png",
     "./assets/hero.jpg",
     "./assets/pwa-icons/icon-192.png",
@@ -84,6 +85,27 @@ self.addEventListener("fetch", (event) => {
                     }
                     return response;
                 });
+            })
+    );
+});
+
+self.addEventListener("notificationclick", (event) => {
+    event.notification.close();
+    const targetUrl = new URL(event.notification.data?.url || "./", self.registration.scope);
+
+    event.waitUntil(
+        self.clients.matchAll({ type: "window", includeUncontrolled: true })
+            .then((clients) => {
+                const matchingClient = clients.find((client) => {
+                    const clientUrl = new URL(client.url);
+                    return clientUrl.origin === targetUrl.origin && clientUrl.pathname === targetUrl.pathname;
+                });
+                if (matchingClient) {
+                    return matchingClient.navigate(targetUrl.href).then((client) => {
+                        return client ? client.focus() : self.clients.openWindow(targetUrl.href);
+                    });
+                }
+                return self.clients.openWindow(targetUrl.href);
             })
     );
 });

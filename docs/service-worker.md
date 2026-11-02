@@ -36,7 +36,7 @@ El archivo [`../service-worker.js`](../service-worker.js) se registra desde
 Workers.
 
 1. **Instalación:** precarga la página, el manifest y sus recursos esenciales en
-   `biodomo-static-v2`. Si la precarga falla, la instalación no se completa.
+   `biodomo-static-v3`. Si la precarga falla, la instalación no se completa.
 2. **Activación:** elimina versiones anteriores de las cachés de BioDomo y toma
    control de las pestañas abiertas.
 3. **Navegaciones:** intenta obtener la página de la red para mostrar contenido
@@ -74,6 +74,13 @@ al pulsarlo se abre el diálogo nativo. También se puede usar la opción de
 instalación del menú del navegador. En iPhone/iPad, Safari no ofrece el mismo
 evento de instalación: usa **Compartir > Añadir a pantalla de inicio**.
 
+### Notificaciones
+
+La sección **Notificaciones** ofrece una demostración local basada en
+Notifications API y `showNotification()` del Service Worker. Para conocer el
+flujo, los componentes de Web Push y las limitaciones de este ejemplo, consulta
+[`push-notifications.md`](./push-notifications.md).
+
 Los requisitos y la disponibilidad del botón dependen del navegador. La
 instalación se habilita después de desplegar en HTTPS y de que el navegador haya
 cargado correctamente el manifest, sus íconos y el Service Worker. En Chrome,
@@ -92,7 +99,7 @@ DevTools; no se deben sustituir por imágenes de ejemplo.
    de BioDomo muestra el estado **“activated and is running”**. Confirma que el
    script corresponde a `/AppCurso/service-worker.js`.
 2. **Recursos almacenados:** en **Application > Cache Storage**, abre la caché
-   `biodomo-static-v2` y captura la lista de solicitudes almacenadas. La evidencia
+   `biodomo-static-v3` y captura la lista de solicitudes almacenadas. La evidencia
    debe permitir verificar que sus URLs pertenecen a `/AppCurso/`, por ejemplo
    `/AppCurso/index.html`, `/AppCurso/css/styles.css`,
    `/AppCurso/assets/hero.jpg`, `/AppCurso/manifest.webmanifest` y los íconos de
