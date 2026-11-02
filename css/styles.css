@@ -147,6 +147,11 @@ section {
     font: inherit;
 }
 
+.notification-form small {
+    margin-top: -6px;
+    font-size: 13px;
+}
+
 .notification-form .btn:disabled,
 #enable-notifications:disabled {
     cursor: not-allowed;

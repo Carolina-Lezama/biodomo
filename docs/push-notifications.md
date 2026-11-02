@@ -1,70 +1,84 @@
 # Notificaciones push en BioDomo
 
-## Componentes y tecnologías
+## Componentes
 
-Una implementación de notificaciones push remotas en una PWA suele incluir:
+- **Push API y Notifications API:** el navegador solicita permiso y crea una
+  suscripción para este dispositivo.
+- **Service Worker:** recibe el evento `push` cuando la página no está abierta
+  y muestra el aviso; `notificationclick` abre o enfoca BioDomo.
+- **Backend en Vercel Functions:** `/api/push/subscribe` guarda suscripciones;
+  `/api/push/send` valida el secreto de administración y envía el mensaje al
+  servicio push del navegador.
+- **VAPID:** claves pública y privada identifican al servidor emisor. La clave
+  privada solo vive en variables de entorno del servidor.
+- **Upstash Redis:** almacena suscripciones entre invocaciones serverless y
+  despliegues.
+- **HTTPS:** requisito del navegador para Push y Service Workers (excepto
+  `localhost` en desarrollo).
 
-- **HTTPS y una PWA instalada o abierta:** contexto seguro requerido para las
-  APIs de Service Worker, Push y Notifications (localhost también sirve para
-  desarrollo).
-- **Notifications API:** solicita el permiso explícito del usuario y muestra
-  notificaciones del sistema.
-- **Service Worker:** recibe eventos push aunque la página no esté abierta y
-  muestra la notificación con `showNotification()`. También puede reaccionar al
-  evento `notificationclick`.
-- **Push API:** crea una suscripción por navegador/dispositivo mediante
-  `PushManager.subscribe()`. La suscripción contiene un endpoint y claves
-  criptográficas.
-- **Backend de la aplicación:** genera y protege las claves VAPID, guarda y
-  elimina suscripciones, autentica quién puede enviar y solicita el envío al
-  servicio push del navegador. La clave privada VAPID nunca debe exponerse en
-  el cliente.
-- **Servicio push del navegador:** entrega el mensaje cifrado al navegador
-  asociado con el endpoint de la suscripción. Lo opera el proveedor del
-  navegador; no se debe confundir con el backend de la aplicación.
-- **Persistencia y ciclo de vida:** una base de datos para suscripciones,
-  mecanismos para retirar endpoints expirados y controles para que solo usuarios
-  autorizados reciban mensajes.
+## Configuración requerida para producción
 
-Flujo remoto: el usuario concede permiso y crea una suscripción en el navegador;
-la aplicación envía esa suscripción al backend; el backend la almacena y, ante
-un evento, envía un payload cifrado según Web Push y autentica la solicitud con
-VAPID al servicio push; el
-Service Worker recibe `push` y presenta la notificación.
+El código está preparado para Vercel + Upstash, pero no puede enviar push hasta
+que se conecten esos servicios y se configuren secretos en el proyecto:
 
-## Ejemplo incluido
+1. Instala las dependencias con `npm install`.
+2. Crea una base de datos Redis en Upstash y conecta sus variables REST
+   `UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN` al proyecto Vercel.
+3. Genera un par de claves VAPID desde la raíz del proyecto:
 
-La sección **Notificaciones** de `index.html` implementa un ejemplo local:
+   ```sh
+   npx web-push generate-vapid-keys
+   ```
 
-1. El usuario activa las notificaciones mediante un gesto explícito.
-2. Escribe un título y mensaje.
-3. La aplicación espera el Service Worker activo y muestra una notificación del
-   sistema con `ServiceWorkerRegistration.showNotification()`.
-4. El historial de los últimos 20 mensajes se muestra en la página y se conserva
-   en `localStorage` de ese navegador. Al pulsar una notificación, el Service
-   Worker abre o enfoca BioDomo.
+   Configura los valores resultantes como `NEXT_PUBLIC_VAPID_PUBLIC_KEY` y
+   `VAPID_PRIVATE_KEY`. Configura también `VAPID_SUBJECT` con un contacto válido,
+   por ejemplo `mailto:admin@tu-dominio.com`.
+4. Genera un secreto aleatorio largo (al menos 32 caracteres) y guárdalo como
+   `ADMIN_SECRET`. Compártelo solo con las personas autorizadas para enviar
+   avisos. Puedes generarlo con
+   `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"`.
+   Nunca lo pongas en el código ni en el repositorio.
+5. Agrega todas las variables en **Vercel > Project > Settings > Environment
+   Variables** para Preview/Production según corresponda y vuelve a desplegar.
+   `.env.example` enumera las variables; no contiene credenciales reales.
 
-La lógica de interfaz está en `js/notifications.js`; el registro del Service
-Worker sigue en `index.html`, y el evento de clic está en `service-worker.js`.
-Al añadir el script a la precarga se actualizó la caché estática a
-`biodomo-static-v3`.
+No compartas conmigo ni pegues en el repositorio las claves privadas, el token
+de administración ni el token de Upstash. La clave pública VAPID se entrega al
+navegador mediante `/api/push/config`; los otros secretos permanecen en el
+servidor.
 
-**Límite del ejemplo:** este proyecto no incluye backend, suscripciones Push,
-claves VAPID ni envío remoto. El botón genera una notificación local desde la
-PWA; no permite enviar avisos cuando el usuario está desconectado de BioDomo o
-la aplicación no puede ejecutar el código. Para push real hay que implementar
-el flujo de suscripción y un endpoint de servidor protegido, así como guardar
-las suscripciones y gestionar errores del servicio push.
+## Cómo probar el flujo
 
-## Prueba
+1. Abre el sitio desplegado por HTTPS, activa las notificaciones y acepta el
+   permiso. El navegador registra la suscripción de ese dispositivo en Redis.
+2. Repite la activación en cada dispositivo que quieras incluir como receptor.
+   Cada navegador tiene su propia suscripción.
+3. Escribe el título, el mensaje y el `ADMIN_SECRET`; selecciona **Enviar
+   notificación**. El backend envía el aviso a todas las suscripciones guardadas.
+4. Comprueba el aviso del sistema y su historial en la página. El historial es
+   local a ese navegador; no es un registro central del backend.
 
-1. Sirve la carpeta desde HTTPS o `localhost` (no abras el HTML con `file://`).
-2. Abre BioDomo, concede permiso y envía un mensaje desde **Notificaciones**.
-3. Verifica la notificación del sistema y la entrada del historial. Cierra la
-   pestaña y prueba el clic en la notificación mientras el Service Worker siga
-   registrado.
-4. En DevTools, revisa **Application > Service Workers** y **Notifications**.
-   El permiso se puede revocar desde la configuración del sitio.
+Para probar en desarrollo, usa Vercel CLI (`npx vercel dev`) y un `.env.local`
+con los mismos valores válidos de VAPID/Upstash. `localhost` es un contexto
+seguro aceptado por los navegadores. Una página abierta con `file://` no sirve.
 
-La entrega del sistema operativo y la disponibilidad de notificaciones dependen
-del navegador, sus permisos y la configuración del dispositivo.
+## Protección y límites
+
+El endpoint de envío requiere `ADMIN_SECRET` (también acepta `PUSH_ADMIN_TOKEN`
+para instalaciones anteriores), compara el secreto en el
+servidor y solo acepta solicitudes del mismo origen. Las suscripciones y el
+envío se validan en el backend; endpoints expirados (404/410) se eliminan de
+Redis. Las suscripciones se limitan a 20 nuevas por IP por hora y a 500
+dispositivos en total para acotar abuso/costos. El token se solicita al enviar y
+se limpia del formulario al terminar. Trátalo como una contraseña. Si se filtra,
+rótalo en Vercel.
+
+El frontend no lee variables de entorno directamente: solicita la clave VAPID
+pública al endpoint `/api/push/config`. Aunque Vercel permita marcarla como
+secreta, la clave VAPID pública no es un secreto criptográfico; nunca expongas
+`VAPID_PRIVATE_KEY`, `ADMIN_SECRET` ni las credenciales de Upstash.
+
+Este ejemplo no tiene usuarios ni segmentación: cualquier administrador con el
+secreto envía a todos los dispositivos suscritos. Para producto real, añadir
+autenticación de usuarios, consentimiento y preferencias de suscripción,
+auditoría y límites de envío.

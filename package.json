@@ -1,0 +1,13 @@
+{
+  "name": "biodomo-pwa",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PWA BioDomo con notificaciones Web Push",
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.35.3",
+    "web-push": "^3.6.7"
+  }
+}

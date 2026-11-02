@@ -68,8 +68,8 @@
         <section id="notificaciones" class="notifications-section">
             <div class="content">
                 <h2>Notificaciones de BioDomo</h2>
-                <p>Prueba cómo una PWA puede mostrar avisos del huerto incluso cuando no estás viendo esta página. Escribe un mensaje y envíalo a este dispositivo.</p>
-                <p class="notification-note">Esta demostración genera notificaciones locales en este navegador. Para enviar mensajes de forma remota se necesita un servidor push.</p>
+                <p>Suscribe este dispositivo y envía un aviso a los dispositivos suscritos, incluso cuando BioDomo no está abierto.</p>
+                <p class="notification-note">El envío remoto requiere la configuración de Vercel y Upstash descrita en la guía. El secreto de administración se guarda solo en el servidor.</p>
                 <button type="button" class="btn" id="enable-notifications">Activar notificaciones</button>
                 <p class="notification-status" id="notification-status" role="status" aria-live="polite">Comprobando compatibilidad...</p>
 
@@ -78,6 +78,9 @@
                     <input id="notification-title" name="title" type="text" maxlength="60" value="BioDomo" required>
                     <label for="notification-message">Mensaje</label>
                     <textarea id="notification-message" name="message" maxlength="180" rows="3" required>¡Es hora de revisar tu huerto!</textarea>
+                    <label for="notification-admin-token">Secreto de administración</label>
+                    <input id="notification-admin-token" name="adminToken" type="password" autocomplete="off" required aria-describedby="notification-admin-help">
+                    <small id="notification-admin-help">Solicita este secreto al administrador de BioDomo. No lo compartas ni lo guardes en el sitio.</small>
                     <button type="submit" class="btn" id="send-notification" disabled>Enviar notificación</button>
                 </form>
             </div>

@@ -1,4 +1,4 @@
-const CACHE_NAME = "biodomo-static-v3";
+const CACHE_NAME = "biodomo-static-v4";
 const PRECACHE_URLS = [
     "./",
     "./index.html",
@@ -87,6 +87,26 @@ self.addEventListener("fetch", (event) => {
                 });
             })
     );
+});
+
+self.addEventListener("push", (event) => {
+    let payload = {};
+    try {
+        payload = event.data ? event.data.json() : {};
+    } catch (error) {
+        console.error("El payload push de BioDomo no es JSON válido:", error);
+    }
+
+    const title = typeof payload.title === "string" ? payload.title : "BioDomo";
+    const body = typeof payload.body === "string" ? payload.body : "Tienes una nueva notificación.";
+    const options = {
+        body,
+        icon: "./assets/pwa-icons/icon-192.png",
+        badge: "./assets/pwa-icons/icon-192.png",
+        data: { url: "./#notificaciones" }
+    };
+
+    event.waitUntil(self.registration.showNotification(title, options));
 });
 
 self.addEventListener("notificationclick", (event) => {
