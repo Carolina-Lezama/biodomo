@@ -26,21 +26,43 @@ function requireSameOrigin(request, response) {
     const host = (Array.isArray(forwardedHost) ? forwardedHost[0] : forwardedHost)
         || request.headers.host;
 
-    if (!origin || !host) {
+    if (!host) {
         sendJson(response, 403, { error: "La solicitud debe provenir del mismo sitio." });
         return false;
     }
 
-    try {
-        if (new URL(origin).host !== host) {
+    const matchesHost = (value) => {
+        try {
+            const url = new URL(value);
+            return ["http:", "https:"].includes(url.protocol) && url.host === host;
+        } catch {
+            return false;
+        }
+    };
+
+    if (origin) {
+        if (!matchesHost(origin)) {
             sendJson(response, 403, { error: "La solicitud debe provenir del mismo sitio." });
             return false;
         }
-    } catch {
-        sendJson(response, 403, { error: "Origen no válido." });
+        return true;
+    }
+
+    const referer = request.headers.referer;
+    if (referer) {
+        if (matchesHost(referer)) {
+            return true;
+        }
+        sendJson(response, 403, { error: "La solicitud debe provenir del mismo sitio." });
         return false;
     }
-    return true;
+
+    if (request.headers["sec-fetch-site"] === "same-origin") {
+        return true;
+    }
+
+    sendJson(response, 403, { error: "La solicitud debe provenir del mismo sitio." });
+    return false;
 }
 
 function readJsonBody(request) {

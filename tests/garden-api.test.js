@@ -165,6 +165,32 @@ test("garden API rejects missing credentials and out-of-range readings", async (
     assert.equal(invalidReadingResponse.statusCode, 400);
 });
 
+test("garden GET accepts same-origin browser requests without an Origin header", async (t) => {
+    const redis = createRedisMock();
+    configureRedis(t, redis);
+
+    const sameOriginRequest = request("GET", undefined);
+    delete sameOriginRequest.headers.origin;
+    sameOriginRequest.headers.referer = "https://biodomo.example/huerto";
+    const response = createResponse();
+    await plantsHandler(sameOriginRequest, response);
+    assert.equal(response.statusCode, 200);
+
+    const fetchMetadataRequest = request("GET", undefined);
+    delete fetchMetadataRequest.headers.origin;
+    fetchMetadataRequest.headers["sec-fetch-site"] = "same-origin";
+    const fetchMetadataResponse = createResponse();
+    await plantsHandler(fetchMetadataRequest, fetchMetadataResponse);
+    assert.equal(fetchMetadataResponse.statusCode, 200);
+
+    const crossOriginRequest = request("GET", undefined);
+    delete crossOriginRequest.headers.origin;
+    crossOriginRequest.headers.referer = "https://other.example/huerto";
+    const crossOriginResponse = createResponse();
+    await plantsHandler(crossOriginRequest, crossOriginResponse);
+    assert.equal(crossOriginResponse.statusCode, 403);
+});
+
 test("garden event log persists activities separately and retains plant name as history", async (t) => {
     const redis = createRedisMock();
     configureRedis(t, redis);
