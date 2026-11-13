@@ -31,6 +31,7 @@
                 <ul class="nav-links">
                     <li><a href="#inicio">Inicio</a></li>
                     <li><a href="#innovacion">IoT Botánico (Proyecto Final)</a></li>
+                    <li><a href="#huerto">Mi huerto</a></li>
                     <li><a href="#notificaciones">Notificaciones</a></li>
                     <li><a href="#impacto">Impacto Ambiental</a></li>
                 </ul>
@@ -64,6 +65,62 @@
                     <source src="assets/demo.mp4" type="video/mp4">
                     Tu navegador no soporta la etiqueta de video.
                 </video>
+            </div>
+        </section>
+
+        <section id="huerto" class="garden-section">
+            <div class="content">
+                <h2>Mi huerto BioDomo</h2>
+                <p>Administra tus plantas y guarda mediciones de temperatura, humedad, pH e iluminación. Los datos se sincronizan con el backend cuando hay conexión.</p>
+                <form id="garden-connect-form" class="garden-form">
+                    <label for="garden-admin-secret">Secreto de administración</label>
+                    <input id="garden-admin-secret" name="adminSecret" type="password" autocomplete="off" minlength="32" required>
+                    <small>Usa el secreto configurado por el administrador. No se guarda en el navegador; se mantiene solo mientras esta pestaña está abierta.</small>
+                    <button class="btn" type="submit">Conectar con el huerto</button>
+                </form>
+                <p id="garden-status" class="garden-status" role="status" aria-live="polite">Ingresa el secreto para consultar el huerto.</p>
+            </div>
+
+            <div class="garden-dashboard">
+                <form id="garden-plant-form" class="garden-panel garden-form" hidden>
+                    <h3>Agregar planta</h3>
+                    <label for="garden-plant-name">Nombre</label>
+                    <input id="garden-plant-name" name="name" maxlength="50" required>
+                    <label for="garden-plant-species">Especie</label>
+                    <input id="garden-plant-species" name="species" maxlength="60" required>
+                    <label for="garden-plant-location">Ubicación</label>
+                    <input id="garden-plant-location" name="location" maxlength="60" required>
+                    <button class="btn" type="submit">Guardar planta</button>
+                </form>
+
+                <div class="garden-panel">
+                    <h3>Plantas registradas</h3>
+                    <ul id="garden-plant-list" class="garden-plant-list" aria-live="polite">
+                        <li>Conecta para consultar las plantas.</li>
+                    </ul>
+                </div>
+
+                <form id="garden-reading-form" class="garden-panel garden-form" hidden>
+                    <h3>Registrar medición</h3>
+                    <label for="garden-reading-plant">Planta</label>
+                    <select id="garden-reading-plant" name="plantId" required></select>
+                    <label for="garden-temperature">Temperatura (°C)</label>
+                    <input id="garden-temperature" name="temperatureC" type="number" min="-20" max="70" step="0.1" required>
+                    <label for="garden-humidity">Humedad (%)</label>
+                    <input id="garden-humidity" name="humidity" type="number" min="0" max="100" step="0.1" required>
+                    <label for="garden-ph">pH</label>
+                    <input id="garden-ph" name="ph" type="number" min="0" max="14" step="0.1" required>
+                    <label for="garden-light">Iluminación (lux)</label>
+                    <input id="garden-light" name="lightLux" type="number" min="0" max="100000" step="1" required>
+                    <button class="btn" type="submit">Guardar medición</button>
+                </form>
+
+                <div class="garden-panel">
+                    <h3>Mediciones recientes</h3>
+                    <ul id="garden-reading-list" class="garden-reading-list" aria-live="polite">
+                        <li>Selecciona una planta para consultar sus mediciones.</li>
+                    </ul>
+                </div>
             </div>
         </section>
 
@@ -110,6 +167,7 @@
         </div>
     </footer>
 
+    <script src="js/garden.js"></script>
     <script src="js/notifications.js"></script>
     <script>
         let deferredInstallPrompt;

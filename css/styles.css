@@ -172,6 +172,130 @@ section {
     color: var(--color-acento);
 }
 
+.garden-section {
+    display: block;
+}
+
+.garden-section > .content {
+    max-width: 760px;
+    margin-bottom: 28px;
+}
+
+.garden-section .content h2 {
+    margin-bottom: 12px;
+}
+
+.garden-form {
+    display: grid;
+    gap: 10px;
+}
+
+.garden-form input,
+.garden-form select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--color-texto);
+    border-radius: 6px;
+    color: var(--color-texto);
+    background: var(--color-fondo);
+    font: inherit;
+}
+
+.garden-form small {
+    font-size: 13px;
+}
+
+.garden-form .btn {
+    cursor: pointer;
+}
+
+.garden-form[hidden] {
+    display: none;
+}
+
+.garden-status {
+    margin: 14px 0;
+    font-size: 15px !important;
+}
+
+.garden-dashboard {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.garden-panel {
+    min-width: 0;
+    padding: 22px;
+    border-radius: 12px;
+    background-color: var(--color-texto);
+    color: var(--color-fondo);
+}
+
+.garden-panel h3 {
+    margin-bottom: 14px;
+    color: var(--color-acento);
+}
+
+.garden-panel .btn {
+    cursor: pointer;
+}
+
+.garden-plant-list,
+.garden-reading-list {
+    display: grid;
+    gap: 12px;
+    list-style: none;
+}
+
+.garden-plant-list li,
+.garden-reading-list li {
+    padding: 14px;
+    border-radius: 8px;
+    background-color: rgba(244, 241, 222, 0.1);
+    overflow-wrap: anywhere;
+}
+
+.garden-plant-list p,
+.garden-reading-list p {
+    margin: 6px 0;
+}
+
+.garden-plant-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.garden-plant-actions label {
+    display: grid;
+    gap: 4px;
+    font-size: 14px;
+}
+
+.garden-plant-actions select {
+    max-width: 180px;
+    padding: 7px;
+    border-radius: 5px;
+}
+
+.garden-plant-actions button {
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 5px;
+    background: var(--color-acento);
+    color: var(--color-fondo);
+    font: inherit;
+    cursor: pointer;
+}
+
+.garden-reading-list time {
+    font-size: 14px;
+    opacity: 0.8;
+}
+
 .notification-list {
     display: grid;
     gap: 12px;
@@ -269,6 +393,10 @@ footer p {
         margin-top: 25px;
         flex-direction: column;
         gap: 15px;
+    }
+
+    .garden-dashboard {
+        grid-template-columns: 1fr;
     }
 
     section {

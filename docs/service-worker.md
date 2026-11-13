@@ -2,7 +2,9 @@
 
 > BioDomo también está preparado para instalarse como una aplicación web
 > progresiva (PWA). Consulta el [manifest de la aplicación](../manifest.webmanifest)
-> y los pasos de instalación más abajo.
+> y los pasos de instalación más abajo. El backend del huerto y su base de datos
+> se describen en [backend-huerto.md](./backend-huerto.md); la verificación de
+> características está en la [lista de cotejo PWA](./lista-cotejo-pwa.md).
 
 ## Finalidad
 
@@ -36,7 +38,7 @@ El archivo [`../service-worker.js`](../service-worker.js) se registra desde
 Workers.
 
 1. **Instalación:** precarga la página, el manifest y sus recursos esenciales en
-   `biodomo-static-v5`. Si la precarga falla, la instalación no se completa.
+   `biodomo-static-v6`. Si la precarga falla, la instalación no se completa.
 2. **Activación:** elimina versiones anteriores de las cachés de BioDomo y toma
    control de las pestañas abiertas.
 3. **Navegaciones:** intenta obtener la página de la red para mostrar contenido
@@ -99,7 +101,7 @@ DevTools; no se deben sustituir por imágenes de ejemplo.
    de BioDomo muestra el estado **“activated and is running”**. Confirma que el
    script corresponde a `/AppCurso/service-worker.js`.
 2. **Recursos almacenados:** en **Application > Cache Storage**, abre la caché
-   `biodomo-static-v5` y captura la lista de solicitudes almacenadas. La evidencia
+   `biodomo-static-v6` y captura la lista de solicitudes almacenadas. La evidencia
    debe permitir verificar que sus URLs pertenecen a `/AppCurso/`, por ejemplo
    `/AppCurso/index.html`, `/AppCurso/css/styles.css`,
    `/AppCurso/assets/hero.jpg`, `/AppCurso/manifest.webmanifest` y los íconos de
