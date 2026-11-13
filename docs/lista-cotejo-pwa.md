@@ -11,7 +11,7 @@ publicado; no se deben reemplazar por imágenes de ejemplo.
 | 3 | Íconos de instalación de 192×192 y 512×512, más Apple Touch Icon. | [x] | Manifest y vista previa del icono en el navegador. |
 | 4 | Invitación de instalación basada en `beforeinstallprompt` y limpieza al instalar. | [x] | Chrome/Edge: comprobar el botón **Instalar BioDomo** y el evento `appinstalled`. |
 | 5 | Registro del Service Worker al terminar la carga, con errores visibles en consola. | [x] | DevTools > Application > Service Workers. |
-| 6 | Precaché versionada de la app shell, estilos, scripts e imágenes esenciales. | [x] | DevTools > Application > Cache Storage; comprobar `biodomo-static-v6`. |
+| 6 | Precaché versionada de la app shell, estilos, scripts e imágenes esenciales. | [x] | DevTools > Application > Cache Storage; comprobar `biodomo-static-v7`. |
 | 7 | Navegación con estrategia red primero y página almacenada como alternativa offline. | [x] | Cargar una vez; activar Offline en DevTools y recargar. |
 | 8 | Recursos estáticos servidos desde caché y actualización de recursos correctos del mismo origen. | [x] | Inspeccionar Network con caché activa y luego con conexión. |
 | 9 | Retiro de cachés estáticas antiguas al activar la versión nueva del Service Worker. | [x] | Actualizar la versión del SW y revisar Cache Storage tras activación. |
@@ -23,6 +23,7 @@ publicado; no se deben reemplazar por imágenes de ejemplo.
 | 15 | Acceso al backend protegido por secreto, misma procedencia y validación de datos. | [x] | Probar secreto inválido, origen diferente y lecturas fuera de rango. |
 | 16 | Uso del sitio con conexión perdida: la shell estática abre, pero las operaciones remotas notifican que requieren red. | [x] | Activar Offline y probar tanto la página como una operación del huerto. |
 | 17 | Mensajes de estado accesibles para lectores de pantalla mediante regiones `role="status"` y `aria-live`. | [x] | Revisar el DOM y probar navegación por teclado/lector de pantalla. |
+| 18 | Bitácora de cultivo con actividades fechadas y almacenamiento independiente de sensores y notificaciones. | [x] | Registrar una siembra o cosecha en **Bitácora** y comprobar el historial tras reconectar. |
 
 ## Requisitos para dar por validada la entrega
 

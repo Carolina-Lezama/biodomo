@@ -10,7 +10,9 @@ const {
 
 const PLANTS_KEY = "biodomo:garden:plants";
 const READINGS_KEY_PREFIX = "biodomo:garden:readings:";
+const EVENTS_KEY = "biodomo:garden:events";
 const PLANT_STATUSES = new Set(["germinacion", "crecimiento", "cosecha"]);
+const GARDEN_EVENT_TYPES = new Set(["siembra", "trasplante", "fertilizacion", "poda", "cosecha", "otro"]);
 
 function authorizeRequest(request, response, allowedMethods) {
     if (!allowedMethods.includes(request.method)) {
@@ -79,6 +81,8 @@ module.exports = {
     PLANTS_KEY,
     PLANT_STATUSES,
     READINGS_KEY_PREFIX,
+    EVENTS_KEY,
+    GARDEN_EVENT_TYPES,
     authorizeRequest,
     getPlantId,
     getPlants,

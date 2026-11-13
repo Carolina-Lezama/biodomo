@@ -1,4 +1,4 @@
-const CACHE_NAME = "biodomo-static-v6";
+const CACHE_NAME = "biodomo-static-v7";
 const PRECACHE_URLS = [
     "./",
     "./index.html",

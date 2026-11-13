@@ -13,6 +13,8 @@ Redis es una base de datos NoSQL clave-valor, no una base relacional.
 - Guardar mediciones de temperatura, humedad, pH e iluminación por planta.
 - Mostrar hasta 50 mediciones recientes por planta.
 - Eliminar las mediciones de una planta cuando se elimina dicha planta.
+- Registrar una bitácora fechada de siembras, trasplantes, fertilización, poda,
+  cosecha y otras actividades; conserva hasta 300 eventos recientes.
 
 Las mediciones se capturan desde el formulario; esta entrega no conecta todavía
 la placa IoT ni recibe lecturas automáticas de sensores.
@@ -23,6 +25,7 @@ la placa IoT ni recibe lecturas automáticas de sensores.
 | --- | --- | --- |
 | `biodomo:garden:plants` | Hash | Un JSON por planta, indexado por UUID. Incluye nombre, especie, ubicación, etapa, fecha de riego y fechas de creación/actualización. |
 | `biodomo:garden:readings:<plantId>` | Lista | JSON de mediciones ordenado de más reciente a más antigua; se conservan como máximo 50 por planta. Cada registro incluye UUID, planta, temperatura en °C, humedad en %, pH, luz en lux y fecha. |
+| `biodomo:garden:events` | Lista | Historial de actividades de cultivo, independiente de mediciones y suscripciones push. Conserva los 300 eventos más recientes con tipo, fecha, nota y nombre de planta como referencia histórica. |
 
 El backend limita el huerto a 100 plantas. Las lecturas aceptadas son:
 
@@ -48,10 +51,14 @@ instalación de demostración, no sustituye cuentas, roles ni sesiones de usuari
 | `DELETE /api/garden/plants?id=<uuid>` | Elimina la planta y su historial de lecturas. |
 | `GET /api/garden/readings?plantId=<uuid>` | Devuelve hasta 50 lecturas de una planta. |
 | `POST /api/garden/readings` | Agrega una lectura con `plantId`, `temperatureC`, `humidity`, `ph` y `lightLux`. |
+| `GET /api/garden/events` | Devuelve hasta 100 actividades recientes. Acepta `?plantId=<uuid>` para filtrar. |
+| `POST /api/garden/events` | Registra `plantId`, `eventType`, `note` (hasta 300 caracteres) y `occurredAt` (fecha válida). Tipos: `siembra`, `trasplante`, `fertilizacion`, `poda`, `cosecha`, `otro`. |
 
 La API devuelve JSON y códigos HTTP explícitos para métodos no permitidos,
 credenciales inválidas, datos incompletos, límites y errores de persistencia.
-Las lecturas y plantas no se almacenan en la caché del Service Worker.
+Las lecturas, plantas y eventos no se almacenan en la caché del Service Worker.
+La bitácora conserva el nombre de la planta del evento; eliminar una planta no
+borra sus actividades ya registradas.
 
 ## Configuración
 
@@ -77,7 +84,11 @@ conectar y no presentará datos inventados.
    verifica que los datos siguen en Redis.
 3. Registra una lectura dentro de los rangos y confirma que aparece en el
    historial de esa planta.
-4. Prueba valores fuera de rango y un secreto incorrecto; la API debe rechazarlos.
-5. Elimina la planta y verifica que también desaparece su historial.
-6. Desconecta la red: el cascarón PWA sigue cargando, pero las operaciones del
+4. Registra una actividad en **Bitácora**, vuelve a conectar y confirma que
+   aparece con su planta, tipo y fecha; verifica que no se mezcla con mediciones
+   ni con notificaciones push.
+5. Prueba valores fuera de rango y un secreto incorrecto; la API debe rechazarlos.
+6. Elimina la planta y verifica que desaparecen sus mediciones, pero las
+   actividades quedan como referencia histórica.
+7. Desconecta la red: el cascarón PWA sigue cargando, pero las operaciones del
    backend requieren conexión y muestran el error correspondiente.

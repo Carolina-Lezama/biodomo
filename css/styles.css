@@ -176,6 +176,21 @@ section {
     display: block;
 }
 
+.journal-section {
+    display: block;
+}
+
+.journal-section > .content {
+    max-width: 760px;
+    margin-bottom: 28px;
+}
+
+.journal-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 20px;
+}
+
 .garden-section > .content {
     max-width: 760px;
     margin-bottom: 28px;
@@ -242,14 +257,16 @@ section {
 }
 
 .garden-plant-list,
-.garden-reading-list {
+.garden-reading-list,
+.garden-event-list {
     display: grid;
     gap: 12px;
     list-style: none;
 }
 
 .garden-plant-list li,
-.garden-reading-list li {
+.garden-reading-list li,
+.garden-event-list li {
     padding: 14px;
     border-radius: 8px;
     background-color: rgba(244, 241, 222, 0.1);
@@ -257,7 +274,8 @@ section {
 }
 
 .garden-plant-list p,
-.garden-reading-list p {
+.garden-reading-list p,
+.garden-event-list p {
     margin: 6px 0;
 }
 
@@ -292,6 +310,15 @@ section {
 }
 
 .garden-reading-list time {
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.garden-event-list li {
+    border-left: 4px solid var(--color-acento);
+}
+
+.garden-event-list time {
     font-size: 14px;
     opacity: 0.8;
 }
@@ -396,6 +423,10 @@ footer p {
     }
 
     .garden-dashboard {
+        grid-template-columns: 1fr;
+    }
+
+    .journal-layout {
         grid-template-columns: 1fr;
     }
 

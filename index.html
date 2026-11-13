@@ -32,6 +32,7 @@
                     <li><a href="#inicio">Inicio</a></li>
                     <li><a href="#innovacion">IoT Botánico (Proyecto Final)</a></li>
                     <li><a href="#huerto">Mi huerto</a></li>
+                    <li><a href="#bitacora">Bitácora</a></li>
                     <li><a href="#notificaciones">Notificaciones</a></li>
                     <li><a href="#impacto">Impacto Ambiental</a></li>
                 </ul>
@@ -119,6 +120,41 @@
                     <h3>Mediciones recientes</h3>
                     <ul id="garden-reading-list" class="garden-reading-list" aria-live="polite">
                         <li>Selecciona una planta para consultar sus mediciones.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="bitacora" class="journal-section">
+            <div class="content">
+                <h2>Bitácora de cultivo</h2>
+                <p>Guarda el historial de siembras, trasplantes, fertilización, poda y cosechas. Es una bitácora de actividades, independiente del sistema de avisos.</p>
+            </div>
+            <div class="journal-layout">
+                <form id="garden-event-form" class="garden-panel garden-form" hidden>
+                    <h3>Registrar actividad</h3>
+                    <label for="garden-event-plant">Planta</label>
+                    <select id="garden-event-plant" name="plantId" required></select>
+                    <label for="garden-event-type">Actividad</label>
+                    <select id="garden-event-type" name="eventType" required>
+                        <option value="siembra">Siembra</option>
+                        <option value="trasplante">Trasplante</option>
+                        <option value="fertilizacion">Fertilización</option>
+                        <option value="poda">Poda</option>
+                        <option value="cosecha">Cosecha</option>
+                        <option value="otro">Otra actividad</option>
+                    </select>
+                    <label for="garden-event-date">Fecha de la actividad</label>
+                    <input id="garden-event-date" name="occurredAt" type="datetime-local" required>
+                    <label for="garden-event-note">Detalle</label>
+                    <textarea id="garden-event-note" name="note" maxlength="300" rows="4" required></textarea>
+                    <button class="btn" type="submit">Guardar en bitácora</button>
+                </form>
+                <div class="garden-panel" aria-labelledby="garden-event-list-title">
+                    <h3 id="garden-event-list-title">Historial de actividades</h3>
+                    <p id="garden-event-status" class="garden-status" role="status" aria-live="polite">Conecta con el huerto para consultar la bitácora.</p>
+                    <ul id="garden-event-list" class="garden-event-list" aria-live="polite">
+                        <li>Conecta con el huerto para consultar las actividades.</li>
                     </ul>
                 </div>
             </div>

@@ -1,9 +1,10 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { Redis } = require("@upstash/redis");
+const eventsHandler = require("../api/garden/events");
 const plantsHandler = require("../api/garden/plants");
 const readingsHandler = require("../api/garden/readings");
-const { PLANTS_KEY, READINGS_KEY_PREFIX } = require("../server/garden");
+const { EVENTS_KEY, PLANTS_KEY, READINGS_KEY_PREFIX } = require("../server/garden");
 
 function createResponse() {
     return {
@@ -162,4 +163,61 @@ test("garden API rejects missing credentials and out-of-range readings", async (
         lightLux: 500
     }), invalidReadingResponse);
     assert.equal(invalidReadingResponse.statusCode, 400);
+});
+
+test("garden event log persists activities separately and retains plant name as history", async (t) => {
+    const redis = createRedisMock();
+    configureRedis(t, redis);
+
+    const plantResponse = createResponse();
+    await plantsHandler(request("POST", {
+        name: "Menta",
+        species: "Mentha",
+        location: "Ventana"
+    }), plantResponse);
+    const plantId = plantResponse.body.plant.id;
+
+    const eventResponse = createResponse();
+    await eventsHandler(request("POST", {
+        plantId,
+        eventType: "cosecha",
+        note: "Corté las hojas maduras",
+        occurredAt: "2026-11-12T12:00:00.000Z"
+    }), eventResponse);
+    assert.equal(eventResponse.statusCode, 201);
+    assert.equal(eventResponse.body.event.plantName, "Menta");
+    assert.notEqual(EVENTS_KEY, PLANTS_KEY);
+    assert.notEqual(EVENTS_KEY, `${READINGS_KEY_PREFIX}${plantId}`);
+
+    const filteredEventsResponse = createResponse();
+    await eventsHandler(request("GET", undefined, { plantId }), filteredEventsResponse);
+    assert.equal(filteredEventsResponse.statusCode, 200);
+    assert.equal(filteredEventsResponse.body.events.length, 1);
+    assert.equal(filteredEventsResponse.body.events[0].eventType, "cosecha");
+
+    const deletePlantResponse = createResponse();
+    await plantsHandler(request("DELETE", undefined, { id: plantId }), deletePlantResponse);
+    const historicalEventsResponse = createResponse();
+    await eventsHandler(request("GET"), historicalEventsResponse);
+    assert.equal(historicalEventsResponse.body.events.length, 1);
+    assert.equal(historicalEventsResponse.body.events[0].plantName, "Menta");
+});
+
+test("garden event log rejects unsupported activity types", async (t) => {
+    const redis = createRedisMock();
+    configureRedis(t, redis);
+    const plantResponse = createResponse();
+    await plantsHandler(request("POST", {
+        name: "Tomillo",
+        species: "Thymus vulgaris",
+        location: "Balcón"
+    }), plantResponse);
+
+    const eventResponse = createResponse();
+    await eventsHandler(request("POST", {
+        plantId: plantResponse.body.plant.id,
+        eventType: "alerta",
+        note: "Actividad no soportada"
+    }), eventResponse);
+    assert.equal(eventResponse.statusCode, 400);
 });

@@ -1,15 +1,28 @@
 const gardenConnectForm = document.getElementById("garden-connect-form");
 const gardenPlantForm = document.getElementById("garden-plant-form");
 const gardenReadingForm = document.getElementById("garden-reading-form");
+const gardenEventForm = document.getElementById("garden-event-form");
 const gardenStatus = document.getElementById("garden-status");
+const gardenEventStatus = document.getElementById("garden-event-status");
 const gardenPlantList = document.getElementById("garden-plant-list");
 const gardenReadingList = document.getElementById("garden-reading-list");
 const gardenReadingPlant = document.getElementById("garden-reading-plant");
+const gardenEventPlant = document.getElementById("garden-event-plant");
+const gardenEventDate = document.getElementById("garden-event-date");
+const gardenEventList = document.getElementById("garden-event-list");
 const gardenAdminSecretInput = document.getElementById("garden-admin-secret");
 const gardenStatusLabels = {
     germinacion: "Germinación",
     crecimiento: "Crecimiento",
     cosecha: "Cosecha"
+};
+const gardenEventLabels = {
+    siembra: "Siembra",
+    trasplante: "Trasplante",
+    fertilizacion: "Fertilización",
+    poda: "Poda",
+    cosecha: "Cosecha",
+    otro: "Otra actividad"
 };
 
 let gardenAdminSecret = "";
@@ -18,6 +31,15 @@ let gardenPlants = [];
 
 function setGardenStatus(message) {
     gardenStatus.textContent = message;
+}
+
+function setGardenEventStatus(message) {
+    gardenEventStatus.textContent = message;
+}
+
+function setGardenEventDateToNow() {
+    const localDate = new Date(Date.now() - new Date().getTimezoneOffset() * 60000);
+    gardenEventDate.value = localDate.toISOString().slice(0, 16);
 }
 
 async function readGardenResponse(response) {
@@ -106,6 +128,30 @@ function renderGardenReadings(readings) {
         return;
     }
 
+    function renderGardenEvents(events) {
+        gardenEventList.replaceChildren();
+        if (events.length === 0) {
+            addTextElement(gardenEventList, "li", "Todavía no hay actividades registradas.");
+            return;
+        }
+
+        events.forEach((event) => {
+            const item = document.createElement("li");
+            addTextElement(item, "strong", gardenEventLabels[event.eventType] || "Actividad");
+            addTextElement(item, "p", `Planta: ${event.plantName}`);
+            addTextElement(item, "p", event.note);
+            const time = addTextElement(item, "time", new Date(event.occurredAt).toLocaleString());
+            time.dateTime = event.occurredAt;
+            gardenEventList.append(item);
+        });
+    }
+
+    async function loadGardenEvents() {
+        const result = await gardenRequest("/api/garden/events");
+        renderGardenEvents(result.events);
+        setGardenEventStatus(`${result.events.length} actividad(es) reciente(s).`);
+    }
+
     readings.forEach((reading) => {
         const item = document.createElement("li");
         addTextElement(item, "strong", `${reading.temperatureC} °C · ${reading.humidity}% humedad`);
@@ -139,6 +185,13 @@ async function loadGardenPlants() {
         option.textContent = plant.name;
         gardenReadingPlant.append(option);
     });
+    gardenEventPlant.replaceChildren();
+    gardenPlants.forEach((plant) => {
+        const option = document.createElement("option");
+        option.value = plant.id;
+        option.textContent = plant.name;
+        gardenEventPlant.append(option);
+    });
     if (gardenPlants.some((plant) => plant.id === selectedPlantId)) {
         gardenReadingPlant.value = selectedPlantId;
     }
@@ -146,11 +199,16 @@ async function loadGardenPlants() {
     gardenConnected = true;
     gardenPlantForm.hidden = false;
     gardenReadingForm.hidden = gardenPlants.length === 0;
+    gardenEventForm.hidden = gardenPlants.length === 0;
     if (gardenPlants.length === 0) {
         gardenReadingList.replaceChildren();
         addTextElement(gardenReadingList, "li", "Agrega una planta para registrar mediciones.");
+        gardenEventList.replaceChildren();
+        addTextElement(gardenEventList, "li", "Agrega una planta antes de iniciar la bitácora.");
+        setGardenEventStatus("La bitácora está lista cuando registres una planta.");
     } else {
         await loadGardenReadings();
+        await loadGardenEvents();
     }
 }
 
@@ -172,6 +230,7 @@ gardenConnectForm.addEventListener("submit", async (event) => {
         gardenConnectForm.querySelector('button[type="submit"]').disabled = false;
         gardenPlantForm.hidden = true;
         gardenReadingForm.hidden = true;
+        gardenEventForm.hidden = true;
         console.error("No se pudo conectar con el backend del huerto:", error);
         setGardenStatus(`No se pudo conectar: ${error.message}`);
     }
@@ -259,6 +318,34 @@ gardenReadingForm.addEventListener("submit", async (event) => {
                 lightLux: Number(formData.get("lightLux"))
             })
         });
+
+        gardenEventForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const formData = new FormData(gardenEventForm);
+            try {
+                await gardenRequest("/api/garden/events", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        plantId: formData.get("plantId"),
+                        eventType: formData.get("eventType"),
+                        note: formData.get("note"),
+                        occurredAt: new Date(formData.get("occurredAt")).toISOString()
+                    })
+                });
+                const selectedPlantId = formData.get("plantId");
+                gardenEventForm.reset();
+                gardenEventPlant.value = selectedPlantId;
+                setGardenEventDateToNow();
+                await loadGardenEvents();
+                setGardenEventStatus("Actividad guardada en la bitácora.");
+            } catch (error) {
+                console.error("No se pudo guardar la actividad de cultivo:", error);
+                setGardenEventStatus(`No se pudo guardar la actividad: ${error.message}`);
+            }
+        });
+
+        setGardenEventDateToNow();
         const selectedPlantId = formData.get("plantId");
         gardenReadingForm.reset();
         gardenReadingPlant.value = selectedPlantId;
