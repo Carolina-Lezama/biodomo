@@ -128,30 +128,6 @@ function renderGardenReadings(readings) {
         return;
     }
 
-    function renderGardenEvents(events) {
-        gardenEventList.replaceChildren();
-        if (events.length === 0) {
-            addTextElement(gardenEventList, "li", "Todavía no hay actividades registradas.");
-            return;
-        }
-
-        events.forEach((event) => {
-            const item = document.createElement("li");
-            addTextElement(item, "strong", gardenEventLabels[event.eventType] || "Actividad");
-            addTextElement(item, "p", `Planta: ${event.plantName}`);
-            addTextElement(item, "p", event.note);
-            const time = addTextElement(item, "time", new Date(event.occurredAt).toLocaleString());
-            time.dateTime = event.occurredAt;
-            gardenEventList.append(item);
-        });
-    }
-
-    async function loadGardenEvents() {
-        const result = await gardenRequest("/api/garden/events");
-        renderGardenEvents(result.events);
-        setGardenEventStatus(`${result.events.length} actividad(es) reciente(s).`);
-    }
-
     readings.forEach((reading) => {
         const item = document.createElement("li");
         addTextElement(item, "strong", `${reading.temperatureC} °C · ${reading.humidity}% humedad`);
@@ -160,6 +136,30 @@ function renderGardenReadings(readings) {
         time.dateTime = reading.recordedAt;
         gardenReadingList.append(item);
     });
+}
+
+function renderGardenEvents(events) {
+    gardenEventList.replaceChildren();
+    if (events.length === 0) {
+        addTextElement(gardenEventList, "li", "Todavía no hay actividades registradas.");
+        return;
+    }
+
+    events.forEach((event) => {
+        const item = document.createElement("li");
+        addTextElement(item, "strong", gardenEventLabels[event.eventType] || "Actividad");
+        addTextElement(item, "p", `Planta: ${event.plantName}`);
+        addTextElement(item, "p", event.note);
+        const time = addTextElement(item, "time", new Date(event.occurredAt).toLocaleString());
+        time.dateTime = event.occurredAt;
+        gardenEventList.append(item);
+    });
+}
+
+async function loadGardenEvents() {
+    const result = await gardenRequest("/api/garden/events");
+    renderGardenEvents(result.events);
+    setGardenEventStatus(`${result.events.length} actividad(es) reciente(s).`);
 }
 
 async function loadGardenReadings() {
@@ -200,6 +200,9 @@ async function loadGardenPlants() {
     gardenPlantForm.hidden = false;
     gardenReadingForm.hidden = gardenPlants.length === 0;
     gardenEventForm.hidden = gardenPlants.length === 0;
+    if (!gardenEventDate.value) {
+        setGardenEventDateToNow();
+    }
     if (gardenPlants.length === 0) {
         gardenReadingList.replaceChildren();
         addTextElement(gardenReadingList, "li", "Agrega una planta para registrar mediciones.");
@@ -318,34 +321,6 @@ gardenReadingForm.addEventListener("submit", async (event) => {
                 lightLux: Number(formData.get("lightLux"))
             })
         });
-
-        gardenEventForm.addEventListener("submit", async (event) => {
-            event.preventDefault();
-            const formData = new FormData(gardenEventForm);
-            try {
-                await gardenRequest("/api/garden/events", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        plantId: formData.get("plantId"),
-                        eventType: formData.get("eventType"),
-                        note: formData.get("note"),
-                        occurredAt: new Date(formData.get("occurredAt")).toISOString()
-                    })
-                });
-                const selectedPlantId = formData.get("plantId");
-                gardenEventForm.reset();
-                gardenEventPlant.value = selectedPlantId;
-                setGardenEventDateToNow();
-                await loadGardenEvents();
-                setGardenEventStatus("Actividad guardada en la bitácora.");
-            } catch (error) {
-                console.error("No se pudo guardar la actividad de cultivo:", error);
-                setGardenEventStatus(`No se pudo guardar la actividad: ${error.message}`);
-            }
-        });
-
-        setGardenEventDateToNow();
         const selectedPlantId = formData.get("plantId");
         gardenReadingForm.reset();
         gardenReadingPlant.value = selectedPlantId;
@@ -354,5 +329,31 @@ gardenReadingForm.addEventListener("submit", async (event) => {
     } catch (error) {
         console.error("No se pudo guardar la medición:", error);
         setGardenStatus(`No se pudo guardar la medición: ${error.message}`);
+    }
+});
+
+gardenEventForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const formData = new FormData(gardenEventForm);
+    try {
+        await gardenRequest("/api/garden/events", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                plantId: formData.get("plantId"),
+                eventType: formData.get("eventType"),
+                note: formData.get("note"),
+                occurredAt: new Date(formData.get("occurredAt")).toISOString()
+            })
+        });
+        const selectedPlantId = formData.get("plantId");
+        gardenEventForm.reset();
+        gardenEventPlant.value = selectedPlantId;
+        setGardenEventDateToNow();
+        await loadGardenEvents();
+        setGardenEventStatus("Actividad guardada en la bitácora.");
+    } catch (error) {
+        console.error("No se pudo guardar la actividad de cultivo:", error);
+        setGardenEventStatus(`No se pudo guardar la actividad: ${error.message}`);
     }
 });
